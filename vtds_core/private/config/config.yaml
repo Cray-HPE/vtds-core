@@ -1,0 +1,162 @@
+# This file contains the base configuration (defaults) for the vTDS
+# core driver. It is what will be returned from the get_base_config()
+# and get_base_config_text() calls into the vtds-core configuration
+# API.
+core:
+  # The 'layers' section configures the layer plugins for
+  # loading. There are four layers:
+  #
+  # - core
+  # - provider
+  # - platform
+  # - cluster
+  # - application
+  #
+  # The 'core' layer is a bit special because it specifies the version
+  # of the vTDS core driver that will be used to run vtds
+  # requests. This may differ from the version used to invoke those
+  # requests because vTDS requests run within a run-time created
+  # Python virtual environment. The core driver wrapper that initiates
+  # requests, however, runs in the user's Python environment using the
+  # installed vtds-core package found there. The wrapper, in turn,
+  # creates a virtual environment, installs the core driver and all of
+  # the layers specified here in that virtual environment, then
+  # invokes the requests themselves inside the virtual environment
+  # using the versions specified here..
+  #
+  # Each layer consists of a pip installable package containing an
+  # importable python module. The installationa and loading is
+  # configured using the following data:
+  #
+  # - index_url
+  #
+  #   the URL to the PyPI style index where the plugin module is
+  #   hosted. If this is empty or None, the public PyPI is used.
+  #
+  # - package:
+  #
+  #   the package name containing the python module that implements
+  #   the layer -- REQUIRED
+  #
+  # - module:
+  #
+  #   the module name to be imported from the package -- REQUIRED
+  #
+  # - version:
+  #
+  #   the version requested using the syntax of a pip requirements
+  #   file. If this is empty or None, the latest stable version will
+  #   be used.
+  #
+  # If you are pulling the layer from a private index requiring
+  # access tokens, you will need to provide a means for pip to
+  # authenticate. The easiest way to do this is to set up a '.netrc'
+  # file for the host in your home directory.
+  #
+  # The base configuration uses mock implementations of each layer
+  # to permit easy unit testing. Override these in your
+  # configuration overlay(s) to specify the layer plugins you
+  # actually want for your vTDS.
+  layers:
+    core:
+      index_url: "https://artifactory.algol60.net/artifactory/csm-python-modules/simple"
+      package: vtds-core
+      module: vtds_core
+      version: None
+    provider:
+      index_url: "https://artifactory.algol60.net/artifactory/csm-python-modules/simple"
+      package: vtds-provider-mock
+      module: vtds_provider_mock
+      version: None
+    platform:
+      index_url: "https://artifactory.algol60.net/artifactory/csm-python-modules/simple"
+      package: vtds-platform-mock
+      module: vtds_platform_mock
+      version: None
+    cluster:
+      index_url: "https://artifactory.algol60.net/artifactory/csm-python-modules/simple"
+      package: vtds-cluster-mock
+      module: vtds_cluster_mock
+      version: None
+    application:
+      index_url: "https://artifactory.algol60.net/artifactory/csm-python-modules/simple"
+      package: vtds-application-mock
+      module: vtds_application_mock
+      version: None
+
+  # The 'configurations' section lists the configuration overlays to
+  # be applied when preparing your vTDS for deployment along with
+  # metadata indicating how to retrieve them.
+  #
+  # Configuration overlays are applied by merging them on top of each
+  # other in the order in which they appear in this list, with each
+  # overlay potentially overwriting elements of the previous overlay
+  # in the list. Usually it is a good idea to specify the overlays on
+  # the command line as the last ones to apply.
+  #
+  # Each configuration overlay source in the list consists of a 'type'
+  # and a 'metadata' block that is specific to the type. The available
+  # types are:
+  #
+  # - command-line
+  #
+  #   Look for pathnames to configuration overlays on the command
+  #   line and apply them in the order specified there.
+  #
+  #   The metadata block for command-line configs is an empty map.
+  #
+  # - local-file
+  #
+  #   Look for the configuration in a local file whose pathname is
+  #   specified in the metadata block. The metadata block for
+  #   local-file configs is a map containing a single 'pathname'
+  #   element which indicates the local pathname to the file.
+  #
+  # - git
+  #
+  #   Retrieve a configuration overlay from a remote git repository
+  #   based on information in the metadata block. The information in
+  #   the metadata for git overlays is a map containing the following
+  #   elements:
+  #
+  #   - 'repo'
+  #
+  #     This specifies the URL used to retrieve the git repository.
+  #
+  #   - 'version'
+  #
+  #     This specifies the branch, tag or SHA to be used to obtain the
+  #     overlay. The 'version' element is required because if the same
+  #     repo is used for several configuraion overlays, the repo will
+  #     be cloned once and each overlay will be taken from its
+  #     respective specified version from the same clone.
+  #
+  #   - 'path'
+  #
+  #     This specifies the relative forward slash ('/') separated path
+  #     to the desired overlay file within the repo.
+  #
+  # - url
+  #
+  #   Look for the configuration overlay at the specified URL. If the
+  #   URL host requires authorization credentials, those can be set up
+  #   in a '.netrc' file in your home directory. The metadata for a
+  #   'url' type configuration overlay is a maap containing a single
+  #   'url' element specifyiing the URL to be be used to find the
+  #   overlay.
+  configurations:
+  # Examples:
+  #
+  # - type: local-file
+  #   metadata:
+  #     pathname: /the/path/to/my/config/overlay.yaml
+  # - type: git
+  #   metadata:
+  #     repo: git@github.com:my-config-repo-name.git
+  #     version: main
+  #     path: my/config/overlay.yaml
+  # - type: url
+  #   metadata:
+  #     url: https://www.example.com/vtds_overlays/my/config/overlay.yaml
+  - type: command-line
+    metadata: {}
