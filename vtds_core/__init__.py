@@ -24,4 +24,3 @@
 
 """
 from .base_config import BaseConfig
-from .wrapper import entry

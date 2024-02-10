@@ -39,6 +39,7 @@ description = 'Core Driver for the Virtual Test Development System (vTDS) suite'
 dependencies = [
     'pyyaml~=6.0',
     'vtds_base~=0.0',
+    'dulwich~=0.21'
 ]
 
 dynamic = ['version']
@@ -70,9 +71,8 @@ test = [
     'coverage~=7.4',
 ]
 
-# XXX - Need to figure this out or simply not use this method...
-# [project.scripts]
-# vtds = "vtds-core:wrapper.entry"
+[project.scripts]
+vtds = "vtds_core.wrapper:entry"
 
 # Defines which folders belong to our package.
 [tool.setuptools.packages.find]

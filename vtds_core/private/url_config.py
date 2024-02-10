@@ -20,12 +20,17 @@
 # OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
-"""Module initialization
+"""Wrapped functions for retrieving and decoding configs from URLs.
 
 """
 
-from os.path import (
-    join as path_join,
-    dirname
-)
-CONFIG_DIR = path_join(dirname(__file__), "config")
+
+def read_url_config(build_path, url):
+    """Read in a configuration file from a URL and return the
+       parsed collection from that file.
+
+    """
+    # pylint: disable=fixme
+    # XXX - IMPLEMENT THIS!!!
+    print("read URL config from '%s' using build_path = '%s'" % (url, build_path))
+    return {}

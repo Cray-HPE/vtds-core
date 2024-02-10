@@ -36,7 +36,7 @@ def main(argv):
     """Do some vTDS request...
 
     """
-    print("thank you for making a vTDS request... [%s]" % str(argv))
+    print("thank you for making a vTDS request... %s" % str(argv))
 
 
 def entry():
@@ -47,3 +47,7 @@ def entry():
 
     """
     entrypoint(USAGE_MSG, main)
+
+
+if __name__ == "__main__":
+    entry()

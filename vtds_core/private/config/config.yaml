@@ -31,7 +31,7 @@ core:
   # - index_url
   #
   #   the URL to the PyPI style index where the plugin module is
-  #   hosted. If this is empty or None, the public PyPI is used.
+  #   hosted. If this is empty or null, the public PyPI is used.
   #
   # - package:
   #
@@ -45,7 +45,7 @@ core:
   # - version:
   #
   #   the version requested using the syntax of a pip requirements
-  #   file. If this is empty or None, the latest stable version will
+  #   file. If this is empty or null, the latest stable version will
   #   be used.
   #
   # If you are pulling the layer from a private index requiring
@@ -62,27 +62,27 @@ core:
       index_url: "https://artifactory.algol60.net/artifactory/csm-python-modules/simple"
       package: vtds-core
       module: vtds_core
-      version: None
+      version: null
     provider:
       index_url: "https://artifactory.algol60.net/artifactory/csm-python-modules/simple"
       package: vtds-provider-mock
       module: vtds_provider_mock
-      version: None
+      version: null
     platform:
       index_url: "https://artifactory.algol60.net/artifactory/csm-python-modules/simple"
       package: vtds-platform-mock
       module: vtds_platform_mock
-      version: None
+      version: null
     cluster:
       index_url: "https://artifactory.algol60.net/artifactory/csm-python-modules/simple"
       package: vtds-cluster-mock
       module: vtds_cluster_mock
-      version: None
+      version: null
     application:
       index_url: "https://artifactory.algol60.net/artifactory/csm-python-modules/simple"
       package: vtds-application-mock
       module: vtds_application_mock
-      version: None
+      version: null
 
   # The 'configurations' section lists the configuration overlays to
   # be applied when preparing your vTDS for deployment along with
@@ -98,6 +98,17 @@ core:
   # and a 'metadata' block that is specific to the type. The available
   # types are:
   #
+  # - core-config
+  #
+  #   Apply the global core configuration as an overlay. This
+  #   configuration is primarily used to set up and run requests, but
+  #   if an item of this type is included here, the complete core
+  #   configuration will be overlaid at that point in the composition
+  #   process. The 'core' section of the core configuration is always
+  #   overlaid on the final configuration as the last overlay.
+  #
+  #   The metadata for core-config is an empty map.
+  #
   # - command-line
   #
   #   Look for pathnames to configuration overlays on the command
@@ -107,10 +118,12 @@ core:
   #
   # - local-file
   #
-  #   Look for the configuration in a local file whose pathname is
+  #   Retrieve the configuration from a local file whose pathname is
   #   specified in the metadata block. The metadata block for
   #   local-file configs is a map containing a single 'pathname'
-  #   element which indicates the local pathname to the file.
+  #   element which indicates the local pathname to the file. If the
+  #   pathname is relative, it is relative to the directory where the
+  #   'vtds' commands are run.
   #
   # - git
   #
@@ -138,7 +151,7 @@ core:
   #
   # - url
   #
-  #   Look for the configuration overlay at the specified URL. If the
+  #   Retrieve the configuration from the specified URL. If the
   #   URL host requires authorization credentials, those can be set up
   #   in a '.netrc' file in your home directory. The metadata for a
   #   'url' type configuration overlay is a maap containing a single
@@ -159,4 +172,6 @@ core:
   #   metadata:
   #     url: https://www.example.com/vtds_overlays/my/config/overlay.yaml
   - type: command-line
+    metadata: {}
+  - type: core-config
     metadata: {}
