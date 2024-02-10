@@ -25,7 +25,7 @@
 # commonality has been removed. Tell lint it is okay...
 #
 # pylint: disable=duplicate-code
-"""Validate a proposed vTDS configuration without deploying the vTDS.
+"""Remove all resources allocated to a vTDS deployment.
 
 """
 from os.path import (
@@ -44,7 +44,7 @@ from vtds_base import (
 from .common import CoreCommon
 
 USAGE_MSG = """
-Usage: vtds [CORE-OPTIONS] validate [OPTIONS]
+Usage: vtds [CORE-OPTIONS] remove [OPTIONS]
 
 Where:
     CORE_OPTIONS are the options to the vTDS core, not described here. To
@@ -54,8 +54,8 @@ Where:
 
     -c,--config=<file>
 
-    Specify the path to the configuration overlay file you intend to
-    use to deploy your vTDS.
+    Specify the path to the configuration overlay file you used to
+    to deploy your vTDS.
 
     This option can be used more than once, and each instance merges
     another configuration overlay onto the previously specified
@@ -76,7 +76,7 @@ Where:
 
 
 def main(argv):
-    """Validate a vTDS configuration without deploying the vTDS.
+    """Remove a vTDS deployment.
 
     """
     try:
@@ -145,7 +145,7 @@ def main(argv):
 
     # Run the request...
     stack.prepare()
-    stack.validate()
+    stack.remove()
 
 
 def entry():
