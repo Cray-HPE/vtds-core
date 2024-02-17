@@ -28,88 +28,235 @@ from os.path import (
     join as join_path,
     exists
 )
-from yaml import (
-    safe_dump,
-    YAMLError
+from shutil import rmtree
+from dulwich.porcelain import (
+    clone,
+    checkout_branch
 )
-# from dulwich.porcelain import (
-#    clone,
-#    checkout_branch,
-#    pull,
-#    branch_list
-# )
+from dulwich.repo import Repo
+from dulwich.objects import (
+    Tag,
+    Commit
+)
 from vtds_base import (
     read_config,
     ContextualError
 )
 
 
+class GitConfigs:
+    """Container for the list and state of git configuration repos.
+
+    """
+    def __init__(self, build_dir):
+        """Constructor: prepare a place for repos to live and
+        initialize the list and state of the repos.
+
+        """
+        self.repos = {}
+        self.repos_dir = join_path(build_dir, "core", "configs", "git")
+        if exists(self.repos_dir):
+            try:
+                rmtree(self.repos_dir)
+            except OSError as err:
+                raise ContextualError(
+                    "cannot remove git configs tree '%s' - %s" % (
+                        self.repos_dir, str(err)
+                    )
+                ) from err
+        try:
+            makedirs(self.repos_dir)
+        except OSError as err:
+            raise ContextualError(
+                "cannot create git configs tree '%s' - %s" % (
+                    self.repos_dir, str(err)
+                )
+            ) from err
+
+    def add_config(self, url):
+        """Create or learn a directory to contain the repo found at
+        the specified URL under the specified build directory tree.
+
+        """
+        # If we already know the repo, return the path to it
+        if url in self.repos:
+            return self.repos[url]
+        # Don't know it, need to make the dir for it.
+        repo_name = url.split('/')[-1].removesuffix('.git')
+        repo_path = join_path(
+            self.repos_dir, repo_name
+        )
+        self.repos[url] = (repo_name, repo_path)
+        try:
+            makedirs(repo_path)
+        except OSError as err:
+            raise ContextualError(
+                "cannot create git config repo directory '%s' - %s" % (
+                    repo_path, str(err)
+                )
+            ) from err
+        return (repo_name, repo_path)
+
+
 class GitConfig:
     """Configuration from a git repo
 
     """
+    # Class variable to keep track of the container we are putting all
+    # GitConfig instances into.
+    configs = None
+
     def __init__(self, url, version, build_dir):
         """Constructor...
 
         """
+        GitConfig.configs = (
+            GitConfigs(build_dir) if GitConfig.configs is None else
+            GitConfig.configs
+        )
         self.url = url
-        self.version = version
-        self.git_dir = join_path(build_dir, 'core', 'git')
-        self.repo_dir = None
+        self.version = bytes(version, 'UTF-8') if version is not None else None
+        self.default_version = version is None
+        self.repo_name, self.git_dir = GitConfig.configs.add_config(self, url)
+        self.repo = None
+
+    def _clone(self):
+        """Clone the repo that this object refers to.
+
+        """
+        if self.repo is not None:
+            # Already cloned, don't try to do it again
+            return
         try:
-            makedirs(self.git_dir)
-        except OSError as err:
+            clone(self.url, target=self.git_dir)
+        except Exception as err:
             raise ContextualError(
-                "cannot create directory for git configs '%s' - %s" % (
-                    self.git_dir, str(err)
+                "error cloning GIT configuration repo '%s "
+                "into directory '%s' = %s" % (
+                    self.url, self.git_dir, str(err)
+                )
+            ) from err
+        self.repo = Repo(self.git_dir)
+
+    def _get_object(self, sha):
+        """Given a SHA1 return the object from the repo corresponding
+        to that SHA1.
+
+        """
+        try:
+            return self.repo.get_object(sha)
+        except Exception as err:
+            raise ContextualError(
+                "cannot find the object for SHA1 '%s' in '%s' at '%s'" % (
+                    sha, self.url, self.git_dir
+                )
+            ) from err
+
+    def _commit_from_sha(self, sha):
+        """Deconstruct a tag SHA1 (which could be a Commit or a Tag)
+        and get the commit from it.
+
+        """
+        obj = self._get_object(sha)
+        if not isinstance(obj, (Tag, Commit)):
+            raise ContextualError(
+                "SHA1 '%s' derived from requested version '%s' in '%s' "
+                "at '%s' is neither a Commit nor a Tag" % (
+                    sha, self.version, self.url, self.git_dir
+                )
+            )
+        return sha if not isinstance(obj, Tag) else obj.object[1]
+
+    @staticmethod
+    def _remote_branch(ref):
+        """Based on the name of a ref, determine if it is a remote
+        branch and return True if it is, False if it is not.
+
+        """
+        return ref.startswith(b'refs/remote')
+
+    @staticmethod
+    def _local_branch(ref):
+        """Based on the name of a ref, determine if it is a local
+        branch and return True if it is, False if it is not.
+
+        """
+        return ref.startswith(b'refs/heads')
+
+    @staticmethod
+    def _local_head(ref):
+        """Based on the name of a ref, determine if it is a local
+        branch and return True if it is, False if it is not.
+
+        """
+        return ref == b'HEAD'
+
+    @staticmethod
+    def _tag(ref):
+        """Based on the name of a ref, determine if it is a tag and
+        return True if it is and False if it is not.
+
+        """
+        return ref.startswith(b'refs/tags')
+
+    def _get_version(self):
+        """Check out the branch or tag that the version refers to. If
+        no version, we take the default (do nothing here).
+
+        """
+        if self.default_version or self.version == b"HEAD":
+            # Either no version is known yet for this repo, or the
+            # user requested HEAD (which we interpret at the remote
+            # HEAD since the local HEAD floats). Set the version to
+            # the remote HEAD symref branch.
+            symrefs = self.repo.refs.get_symrefs()
+            self.version = (
+                symrefs[b'refs/remotes/origin/HEAD'].split(b'/')[-1]
+            )
+        true_version = self.version
+        for ref, sha in self.repo.get_refs().items():
+            if self._local_head(ref):
+                # Skip the local HEAD, since that will point to the
+                # most recently selected branch which is useless to
+                # us...
+                continue
+            if ref.split(b'/')[-1] != self.version:
+                # This ref is not our version...
+                continue
+            if self._local_branch(ref):
+                # Already have the local branch
+                break
+            if self._remote_branch(ref):
+                # It's a remote branch, so make a local branch from it
+                ref = (self.version, sha)
+                self.repo.refs.add_if_new(*ref)
+                break
+            # We know we matched something, must be a tag: get the
+            # real commit from the tag
+            true_version = self._commit_from_sha(sha)
+            break
+        # Okay, either we matched something above and set things up
+        # the way we want, or the version selected is either a SHA1 or
+        # not a real branch or tag. At this point, it doesn't really
+        # matter. Try to check it out, and if it fails report a
+        # problem.
+        try:
+            checkout_branch(self.repo, true_version)
+        except Exception as err:
+            raise ContextualError(
+                "unable to check-out version '%s' of '%s' in '%s' - %s" % (
+                    self.version, self.url, self.git_dir, str(err)
                 )
             ) from err
 
     def retrieve(self, config_path):
         """Retrieve the repo at the specified URL if necessary and
         return the configuration in the file at the relative path in
-        the repo specified by 'config_path'.
+        the repo specified by 'config_path'. The value of 'config_path'
+        is a relative pathname separated by forward slashes ('/').
 
         """
-        repo_map = {}
-        repo_map_file = join_path(self.git_dir, '.repo_map.yaml')
-        if exists(repo_map_file):
-            # Not really a config file, but it doesn't know that. It
-            # is a YAML file, so I can read it.
-            repo_map = read_config(repo_map_file)
-        repo_name = repo_map.get(self.url, None)
-        if repo_name is None:
-            repo_name = self.clone()
-            repo_map[self.url] = repo_name
-            try:
-                with open(repo_map_file, 'w', encoding='UTF-8'):
-                    safe_dump(repo_map, repo_map_file)
-            except (OSError, YAMLError) as err:
-                raise ContextualError(
-                    "failed to re-write cached GIT repo map file '%s' - %s" % (
-                        repo_map_file, str(err)
-                    )
-                ) from err
-        self.checkout()
-        file_path = join_path(self.repo_dir, config_path)
+        self._clone()
+        self._get_version()
+        file_path = join_path(self.git_dir, config_path)
         return read_config(file_path)
-
-    def clone(self):
-        """Clone the repo that this object refers to.
-
-        """
-        repo_name = self.url.split('/')[-1]
-        self.repo_dir = join_path(self.git_dir, repo_name)
-        print("cloning '%s' into '%s'" % (self.url, repo_name))
-        return repo_name
-
-    def checkout(self):
-        """Check out a specific version of the config repo and make
-        sure it is up to date with the remote repo.
-
-        """
-        print(
-            "checking out '%s' in '%s' (remote is '%s'" % (
-                self.version, self.repo_dir, self.url
-            )
-        )

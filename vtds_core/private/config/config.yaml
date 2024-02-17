@@ -138,11 +138,8 @@ core:
   #
   #   - 'version'
   #
-  #     This specifies the branch, tag or SHA to be used to obtain the
-  #     overlay. The 'version' element is required because if the same
-  #     repo is used for several configuraion overlays, the repo will
-  #     be cloned once and each overlay will be taken from its
-  #     respective specified version from the same clone.
+  #     This specifies the branch or tag to be used to obtain the
+  #     overlay.
   #
   #   - 'path'
   #
