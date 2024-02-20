@@ -23,14 +23,37 @@
 """Wrapped functions for retrieving and decoding configs from URLs.
 
 """
+from yaml import (
+    safe_load,
+    YAMLError
+)
+from requests import get as url_get
+from vtds_base import ContextualError
+
+HEADERS = {
+    'Content-Type': 'text/plain',
+    'Accept': 'text/plain'
+}
 
 
-def read_url_config(build_path, url):
+def read_url_config(url):
     """Read in a configuration file from a URL and return the
        parsed collection from that file.
 
     """
-    # pylint: disable=fixme
-    # XXX - IMPLEMENT THIS!!!
-    print("read URL config from '%s' using build_path = '%s'" % (url, build_path))
-    return {}
+    response = url_get(url, headers=HEADERS, verify=True, timeout=600)
+    if not response.ok:
+        raise ContextualError(
+            "failed to retrieve '%s' "
+            "(status_code=%d, text='%s', reason='%s')" % (
+                url, response.status_code, response.text, response.reason
+            )
+        )
+    try:
+        return safe_load(response.text)
+    except YAMLError as err:
+        raise ContextualError(
+            "failed to parse YAML file found at '%s' - %s" % (
+                url, str(err)
+            )
+        ) from err

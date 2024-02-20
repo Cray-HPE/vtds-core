@@ -39,7 +39,8 @@ description = 'Core Driver for the Virtual Test Development System (vTDS) suite'
 dependencies = [
     'pyyaml~=6.0',
     'vtds_base~=0.0',
-    'dulwich~=0.21'
+    'dulwich~=0.21',
+    'requests~=2.31'
 ]
 
 dynamic = ['version']

@@ -82,7 +82,7 @@ class CoreCommon:
                 metadata = config.get('metadata', {})
                 url = metadata.get('url', None)
                 full_overlay = merge_configs(
-                    full_overlay, read_url_config(self.build_path, url)
+                    full_overlay, read_url_config(url)
                 )
             elif config_type == 'local-file':
                 metadata = config.get('metadata', {})
