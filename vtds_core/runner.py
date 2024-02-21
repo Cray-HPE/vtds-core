@@ -23,6 +23,7 @@
 """Virtual environment python runner mechanisms
 
 """
+import sys
 from os import makedirs
 from os.path import join as path_join
 from venv import EnvBuilder
@@ -99,7 +100,7 @@ class RequestRunner:
 
         """
         request[0] = "vtds_core.private.%s" % request[0]
-        self.run_module(request)
+        self.run_module(request, stdout=sys.stdout, stderr=sys.stderr)
 
     def ensurepip(self):
         """Install pip in the virtualenv capturing output in output

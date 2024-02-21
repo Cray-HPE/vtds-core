@@ -101,7 +101,7 @@ class CoreCommon:
                     "configuration sources in the core "
                     "configuration" % config_type
                 )
-            return full_overlay
+        return full_overlay
 
     def compose_stack(self, core_config_file, cmd_config_files):
         """Construct and initialize a vTDS stack based on the supplied

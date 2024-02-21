@@ -111,7 +111,7 @@ def main(argv):
         elif opt in ['-C', '--core-config']:
             if core_conf_file is not None:
                 raise UsageError(
-                    "the -c,--core-config option should only be supplied "
+                    "the -C,--core-config option should only be supplied "
                     "by the 'vtds' wrapper script, never on the command line"
                 )
             core_conf_file = abspath(arg)

@@ -117,7 +117,7 @@ class GitConfig:
         self.url = url
         self.version = bytes(version, 'UTF-8') if version is not None else None
         self.default_version = version is None
-        self.repo_name, self.git_dir = GitConfig.configs.add_config(self, url)
+        self.repo_name, self.git_dir = GitConfig.configs.add_config(url)
         self.repo = None
 
     def _clone(self):
@@ -126,6 +126,10 @@ class GitConfig:
         """
         if self.repo is not None:
             # Already cloned, don't try to do it again
+            return
+        if exists(join_path(self.git_dir, ".git")):
+            # Already cloned but we don't have it loaded yet
+            self.repo = Repo(self.git_dir)
             return
         try:
             clone(self.url, target=self.git_dir)
@@ -225,11 +229,12 @@ class GitConfig:
                 continue
             if self._local_branch(ref):
                 # Already have the local branch
+                true_version = ref
                 break
             if self._remote_branch(ref):
                 # It's a remote branch, so make a local branch from it
-                ref = (self.version, sha)
-                self.repo.refs.add_if_new(*ref)
+                true_version = b"refs/heads/%s" % self.version
+                self.repo.refs.add_if_new(true_version, sha)
                 break
             # We know we matched something, must be a tag: get the
             # real commit from the tag
