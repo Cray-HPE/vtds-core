@@ -177,7 +177,7 @@ def main(argv):
         ) from err
 
     # Read in the core configuration...
-    config = read_config(conf_file) if conf_file and exists(conf_file) else {}
+    config = read_config(conf_file) if conf_file else {}
     base_config = BaseConfig().get_base_config()
     config = merge_configs(base_config, config)
 
