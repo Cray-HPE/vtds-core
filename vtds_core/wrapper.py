@@ -107,14 +107,14 @@ and REQUEST can be any of:
       Release all resources associated with the vTDS system described
       in the configuration supplied.
 
-    base-config
+    base_config
 
       Place the combined annotated base configuration text of all
       layers selected in the core configuration on standard
       output. This is provided to assist in designing configuration
       overlays to create a specific vTDS system.
 
-    show-config
+    show_config
 
       Place the complete final configuration composed using the vTDS
       configuration you have designed on standard output.
