@@ -148,6 +148,8 @@ def main(argv):
         )
     except GetoptError as err:
         raise UsageError(str(err)) from err
+    if not args:
+        raise UsageError("no request provided")
     build_dir = abspath('vtds-build')
     core_config = abspath("config.yaml")
     conf_file = core_config if exists(core_config) else None

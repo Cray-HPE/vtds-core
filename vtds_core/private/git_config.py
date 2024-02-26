@@ -40,6 +40,7 @@ from dulwich.objects import (
 )
 from vtds_base import (
     read_config,
+    logfile,
     ContextualError
 )
 
@@ -131,15 +132,20 @@ class GitConfig:
             # Already cloned but we don't have it loaded yet
             self.repo = Repo(self.git_dir)
             return
-        try:
-            clone(self.url, target=self.git_dir)
-        except Exception as err:
-            raise ContextualError(
-                "error cloning GIT configuration repo '%s "
-                "into directory '%s' = %s" % (
-                    self.url, self.git_dir, str(err)
-                )
-            ) from err
+        out_log = join_path(self.git_dir, "clone_out.log")
+        # Need to open the log in binary mode because output from
+        # dulwich is done with byte strings.
+        with (logfile(out_log, mode='wb', encoding=None) as output):
+            try:
+                clone(self.url, target=self.git_dir, errstream=output)
+            except ContextualError as err:
+                raise ContextualError(
+                    "error cloning GIT configuration repo '%s "
+                    "into directory '%s' - %s" % (
+                        self.url, self.git_dir, str(err)
+                    ),
+                    output=out_log
+                ) from err
         self.repo = Repo(self.git_dir)
 
     def _get_object(self, sha):
