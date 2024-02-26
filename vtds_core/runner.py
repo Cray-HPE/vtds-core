@@ -107,9 +107,15 @@ class RequestRunner:
         and error logs for analysis.
 
         """
+        # Make sure pip is there using 'ensurepip'
         cmd = ["ensurepip", "--upgrade", "--default-pip"]
         stdout = path_join(self.log_dir, "ensure-pip-output.log")
         stderr = path_join(self.log_dir, "ensure-pip-errors.log")
+        self.run_module(cmd, isolated=True, stdout=stdout, stderr=stderr)
+        # Now bring pip up to data using 'pip install --upgrade'
+        cmd = ["pip", "install", "--upgrade", "pip"]
+        stdout = path_join(self.log_dir, "upgrade-pip-output.log")
+        stderr = path_join(self.log_dir, "upgrade-pip-errors.log")
         self.run_module(cmd, isolated=True, stdout=stdout, stderr=stderr)
 
     def install_pkg(self, pkg, version=None, index=None):
