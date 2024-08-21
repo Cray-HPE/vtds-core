@@ -35,6 +35,7 @@ from vtds_base import (
     ContextualError,
     logfile
 )
+from .private.git_modules import GitModule
 
 
 class RequestRunner:
@@ -43,13 +44,14 @@ class RequestRunner:
     virtual environment.
 
     """
-    def __init__(self, venv_path, config):
+    def __init__(self, venv_path, build_dir, config):
         """An environment in which to run vTDS requests that creates a
         python virtual environmment populated with the python version
         and the vTDS layers (and supporting dependencies) derived from
         the core config provided in `config`.
 
         """
+        self.build_dir = build_dir
         self.venv = venv_path
         core = config.get('core', None)
         if core is None:
@@ -118,9 +120,9 @@ class RequestRunner:
         stderr = path_join(self.log_dir, "upgrade-pip-errors.log")
         self.run_module(cmd, isolated=True, stdout=stdout, stderr=stderr)
 
-    def install_pkg(self, pkg, version=None, index=None):
-        """Install the specified version of the sepcified package into
-           the virtual environment.
+    def pypi_install_pkg(self, pkg, version=None, index=None):
+        """Install the specified version of the sepcified package from
+           a PyPI index into the virtual environment.
 
         """
         pkg_string = "%s%s" % (pkg, version) if version is not None else pkg
@@ -130,6 +132,51 @@ class RequestRunner:
         stdout = path_join(self.log_dir, "install-%s-output.log" % pkg)
         stderr = path_join(self.log_dir, "install-%s-errors.log" % pkg)
         self.run_module(cmd, stdout=stdout, stderr=stderr)
+
+    def git_install_pkg(self, pkg, repo_url, version=None):
+        """Install the specified version of the sepcified package from
+           a git source repo into the virtual environment.
+
+        """
+        module = GitModule(repo_url, version, self.build_dir)
+        repo_path = module.retrieve()
+        cmd = ["pip", "install", repo_path]
+        stdout = path_join(self.log_dir, "install-%s-output.log" % pkg)
+        stderr = path_join(self.log_dir, "install-%s-errors.log" % pkg)
+        self.run_module(cmd, stdout=stdout, stderr=stderr)
+
+    def install_pkg(self, name, layer):
+        """Install a layer or package based on information in the
+        config.
+
+        """
+        pkg = layer.get('package', None)
+        if pkg is None:
+            raise ContextualError(
+                "no package name given for layer '%s' "
+                "in core config" % (name)
+            )
+        source_type = layer.get('source_type', "pypi")
+        metadata = layer.get('metadata', {})
+        if source_type == "pypi":
+            version = metadata.get('version', None)
+            index = metadata.get('url', None)
+            self.pypi_install_pkg(pkg, version, index)
+        elif source_type == 'git':
+            version = metadata.get('version', None)
+            repo_url = metadata.get('url', None)
+            if repo_url is None:
+                raise ContextualError(
+                    "no repo URL given for GIT layer '%s' "
+                    "in core config" % name
+                )
+            self.git_install_pkg(pkg, repo_url, version)
+        else:
+            raise ContextualError(
+                "unknown source type '%s' found for package '%s'" % (
+                    source_type, pkg
+                )
+            )
 
     def create_venv(self):
         """Create a virtual environment at the specified path and
@@ -160,14 +207,14 @@ class RequestRunner:
         # capture the output in logs instead of on the console.
         self.ensurepip()
 
-        # Install the layers from the config
+        # Install the layers from the config. First get the base
+        # library if there is one listed. The rest will have a
+        # dependency on it that may break if we don't install it
+        # first.
+        if 'base' in self.layers:
+            self.install_pkg('base', self.layers['base'])
+        # Now get the rest.
         for name, layer in self.layers.items():
-            pkg = layer.get('package', None)
-            if pkg is None:
-                raise ContextualError(
-                    "no package name given for layer '%s' "
-                    "in core config" % (name)
-                    )
-            version = layer.get('version', None)
-            index = layer.get('index_url', None)
-            self.install_pkg(pkg, version, index)
+            if name == 'base':
+                continue
+            self.install_pkg(name, layer)

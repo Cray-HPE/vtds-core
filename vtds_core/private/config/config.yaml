@@ -4,34 +4,31 @@
 # API.
 core:
   # The 'layers' section configures the layer plugins for
-  # loading. There are four layers:
+  # loading. There are four layers plus the vTDS core driver and the
+  # vTDS base library.:
   #
-  # - core
   # - provider
   # - platform
   # - cluster
   # - application
+  # - core
+  # - base
   #
-  # The 'core' layer is a bit special because it specifies the version
-  # of the vTDS core driver that will be used to run vtds
-  # requests. This may differ from the version used to invoke those
+  # The 'core' driver and 'base' library are a bit special because
+  # they specify the the versions of those things used to run vtds
+  # requests. This may differ from the versions used to invoke those
   # requests because vTDS requests run within a run-time created
   # Python virtual environment. The core driver wrapper that initiates
   # requests, however, runs in the user's Python environment using the
   # installed vtds-core package found there. The wrapper, in turn,
-  # creates a virtual environment, installs the core driver and all of
-  # the layers specified here in that virtual environment, then
-  # invokes the requests themselves inside the virtual environment
-  # using the versions specified here..
+  # creates a virtual environment, installs the core driver, base
+  # library and all of the layers specified here in that virtual
+  # environment, then invokes the requests themselves inside the
+  # virtual environment using the versions specified here..
   #
-  # Each layer consists of a pip installable package containing an
-  # importable python module. The installationa and loading is
-  # configured using the following data:
-  #
-  # - index_url
-  #
-  #   the URL to the PyPI style index where the plugin module is
-  #   hosted. If this is empty or null, the public PyPI is used.
+  # Each layer or library consists of a pip installable package
+  # containing an importable python module. The installation and
+  # loading is configured using the following data:
   #
   # - package:
   #
@@ -42,47 +39,94 @@ core:
   #
   #   the module name to be imported from the package -- REQUIRED
   #
+  # - source_type:
+  #
+  #   The type of source from which the package will be pulled. Two
+  #   source types are supported. The default is 'pypi' which is
+  #   treated as a straightforward pip install from the specified PyPI
+  #   index. An optional 'metadata' block for a PyPI source contains
+  #   the following:
+  #
+  # - url
+  #
+  #   the URL to the PyPI style index where the plugin module is
+  #   hosted. If this is empty or null, the public PyPI is used.
+  #
   # - version:
   #
   #   the version requested using the syntax of a pip requirements
   #   file. If this is empty or null, the latest stable version will
   #   be used.
   #
-  # If you are pulling the layer from a private index requiring
+  # If you are pulling the layer from a private PyPIindex requiring
   # access tokens, you will need to provide a means for pip to
   # authenticate. The easiest way to do this is to set up a '.netrc'
   # file for the host in your home directory.
+  #
+  # Alternatively you can use a 'git' source. In this case, the source
+  # is a git repository containing pip installable python source
+  # code. The repository will be cloned and set to the requested
+  # version (branch or tag) then `pip` will be used to install the
+  # package from the cloned git repo. To use a git repo, supply a
+  # 'metadata' block specifying at least the URL of the git repo. As
+  # follows:
+  #
+  # - url:
+  #
+  #   The required URL from which to clone the git repo.
+  #
+  # - version:
+  #
+  #   The optional version (branch, tag or digest). By default the
+  #   default branch is used.
   #
   # The base configuration uses mock implementations of each layer
   # to permit easy unit testing. Override these in your
   # configuration overlay(s) to specify the layer plugins you
   # actually want for your vTDS.
   layers:
+    base:
+      package: vtds-base
+      module: vtds_base
+      source_type: git
+      metadata:
+        url: "git@github.com:Cray-HPE/vtds-base.git"
+        version: null
     core:
-      index_url: "https://artifactory.algol60.net/artifactory/csm-python-modules/simple"
       package: vtds-core
       module: vtds_core
-      version: null
+      source_type: git
+      metadata:
+        url: "git@github.com:Cray-HPE/vtds-core.git"
+        version: null
     provider:
-      index_url: "https://artifactory.algol60.net/artifactory/csm-python-modules/simple"
       package: vtds-provider-mock
       module: vtds_provider_mock
-      version: null
+      source_type: git
+      metadata:
+        url: "git@github.com:Cray-HPE/vtds-provider-mock.git"
+        version: null
     platform:
-      index_url: "https://artifactory.algol60.net/artifactory/csm-python-modules/simple"
       package: vtds-platform-mock
       module: vtds_platform_mock
-      version: null
+      source_type: git
+      metadata:
+        url: "git@github.com:Cray-HPE/vtds-platform-mock.git"
+        version: null
     cluster:
-      index_url: "https://artifactory.algol60.net/artifactory/csm-python-modules/simple"
       package: vtds-cluster-mock
       module: vtds_cluster_mock
-      version: null
+      source_type: git
+      metadata:
+        url: "git@github.com:Cray-HPE/vtds-cluster-mock.git"
+        version: null
     application:
-      index_url: "https://artifactory.algol60.net/artifactory/csm-python-modules/simple"
       package: vtds-application-mock
       module: vtds_application_mock
-      version: null
+      source_type: git
+      metadata:
+        url: "git@github.com:Cray-HPE/vtds-application-mock.git"
+        version: null
 
   # The 'configurations' section lists the configuration overlays to
   # be applied when preparing your vTDS for deployment along with
