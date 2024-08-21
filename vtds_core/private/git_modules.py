@@ -20,19 +20,17 @@
 # OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
-"""Wrapped dulwich functions for processing git repo configs
+"""Wrapped dulwich functions for processing git repo python modules
 
 """
-from os.path import join as join_path
-from vtds_base import read_config
 from .git_repo import (
     GitRepo,
     GitRepos
 )
 
 
-class GitConfigs(GitRepos):
-    """Container for the list and state of git configuration repos.
+class GitModules(GitRepos):
+    """Container for the list and state of git python module repos.
 
     """
     def __init__(self, build_dir):
@@ -40,9 +38,9 @@ class GitConfigs(GitRepos):
         initialize the list and state of the repos.
 
         """
-        GitRepos.__init__(self, build_dir, "configs")
+        GitRepos.__init__(self, build_dir, "modules")
 
-    def add_config(self, url):
+    def add_module(self, url):
         """Create or learn a directory to contain the repo found at
         the specified URL under the specified build directory tree.
 
@@ -50,33 +48,31 @@ class GitConfigs(GitRepos):
         return self._add_repo(url)
 
 
-class GitConfig(GitRepo):
-    """Configuration from a git repo
+class GitModule(GitRepo):
+    """Python module from a git repo
 
     """
     # Class variable to keep track of the container we are putting all
-    # GitConfig instances into.
-    configs = None
+    # GitModule instances into.
+    modules = None
 
     def __init__(self, url, version, build_dir):
         """Constructor...
 
         """
-        GitConfig.configs = (
-            GitConfigs(build_dir) if GitConfig.configs is None else
-            GitConfig.configs
+        GitModule.modules = (
+            GitModules(build_dir) if GitModule.modules is None else
+            GitModule.modules
         )
-        repo_name, git_dir = GitConfig.configs.add_config(url)
+        repo_name, git_dir = GitModule.modules.add_module(url)
         GitRepo.__init__(self, url, version, repo_name, git_dir)
 
-    def retrieve(self, config_path):
+    def retrieve(self):
         """Retrieve the repo at the specified URL if necessary and
-        return the configuration in the file at the relative path in
-        the repo specified by 'config_path'. The value of 'config_path'
-        is a relative pathname separated by forward slashes ('/').
+        return the path to the directory in the install tree where it
+        is cloned.
 
         """
         self._clone()
         self._get_version()
-        file_path = join_path(self.git_dir, config_path)
-        return read_config(file_path)
+        return self.git_dir

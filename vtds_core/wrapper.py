@@ -187,7 +187,7 @@ def main(argv):
     venv_path = path_join(
         build_dir, 'core', 'venv'
     ) if venv_path is None else venv_path
-    request_runner = RequestRunner(venv_path, config)
+    request_runner = RequestRunner(venv_path, build_dir, config)
     request = [args[0]]
     request += ['--build-dir=%s' % build_dir]
     request += (
