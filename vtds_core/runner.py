@@ -66,7 +66,7 @@ class RequestRunner:
         self.env_builder = EnvBuilder(
             system_site_packages=False,
             clear=True,
-            symlinks=False,
+            symlinks=True,
             upgrade=False,
             with_pip=False,
             prompt=None,
