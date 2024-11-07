@@ -39,7 +39,10 @@ description = 'Core Driver for the Virtual Test Development System (vTDS) suite'
 dependencies = [
     'pyyaml~=6.0',
     'vtds_base~=0.0',
-    'dulwich~=0.22',
+    # There was a bug in Dulwich 0.22.3 and 0.22.4 that caused refs not
+    # to be handled properly. Exclude those and got for a 0.22 compatible
+    # version of Dulwich.
+    'dulwich~=0.22,!=0.22.3,!=0.22.4',
     'requests~=2.31'
 ]
 
