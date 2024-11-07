@@ -130,7 +130,7 @@ class GitRepo:
         # dulwich is done with byte strings.
         with logfile(out_log, mode='wb', encoding=None) as output:
             try:
-                clone(self.url, target=self.git_dir, protocol_version=0, errstream=output)
+                clone(self.url, target=self.git_dir, errstream=output)
             except ContextualError as err:
                 raise ContextualError(
                     "error cloning GIT configuration repo '%s "
