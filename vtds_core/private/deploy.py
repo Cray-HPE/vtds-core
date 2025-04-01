@@ -144,6 +144,7 @@ def main(argv):
     stack = CoreCommon(build_dir).compose_stack(core_conf_file, conf_files)
 
     # Run the request...
+    stack.consolidate()
     stack.prepare()
     stack.validate()
     stack.deploy()

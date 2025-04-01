@@ -146,6 +146,9 @@ def main(argv):
     # Get a vTDS stack to use
     stack = CoreCommon(build_dir).compose_stack(core_conf_file, conf_files)
 
+    # Consolidate the configuration
+    stack.consolidate()
+
     # Run the request...
     print(safe_dump(stack.get_final_config()))
 
