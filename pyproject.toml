@@ -50,6 +50,7 @@ dynamic = ['version']
 maintainers = [
     { name = 'Eric Lund', email = 'eric.lund@hpe.com' },
 ]
+readme = { file = 'README.md', content-type = 'text/markdown' }
 requires-python = '>=3.8'
 
 [metadata]
@@ -58,6 +59,9 @@ url = 'https://github.com/Cray-HPE/vtds-core'
 license = { file = 'LICENSE' }
 
 [project.optional-dependencies]
+build = [
+    'build~=1.2.2'
+]
 ci = [
     'nox~=2023.4.22',
 ]
@@ -84,7 +88,6 @@ include = ['vtds_core*', 'vtds_core.private*']
 exclude = ['vtds_core.tests*']
 
 [tool.setuptools.dynamic]
-readme = { file = ['README.md'], content-type = 'text/markdown' }
 
 # Allows for dynamic versioning via git-tag.
 [tool.setuptools_scm]
