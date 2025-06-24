@@ -40,9 +40,10 @@ dependencies = [
     'pyyaml~=6.0',
     'vtds_base~=0.0',
     # There was a bug in Dulwich 0.22.3 and 0.22.4 that caused refs not
-    # to be handled properly. Exclude those and got for a 0.22 compatible
-    # version of Dulwich.
-    'dulwich~=0.22,!=0.22.3,!=0.22.4',
+    # to be handled properly. Exclude those and go for a 0.22 compatible
+    # version of Dulwich. It looks like 0.23.0 may have a bug in it too,
+    # so skip that until it can be investigated.
+    'dulwich~=0.22,!=0.22.3,!=0.22.4,!=0.23.0',
     'requests~=2.31'
 ]
 
