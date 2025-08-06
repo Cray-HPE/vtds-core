@@ -14,6 +14,38 @@ implementation and configuration and allowing layer implementations to
 be mixed and matched (with appropriate configuration) as needed by the
 user based on the user suplied configuration overlays.
 
+## What Is vTDS?
+
+vTDS is an automated tool for deploying Virtual Test Development
+Systems on a variety of resource providers, including cloud providers,
+in-house hardware clusters or even a single development system. It
+allows a user to configure a cluster of Virtual Nodes and Virtual
+Networks and deploy that cluster from scratch for either testing or
+development work, obviating the need for dedicated test and
+development hardware systems.
+
+Unlike other tools that can, for example, instatiate nodes and
+networks within a cloud provider, vTDS abstracts away the resource
+provider resources, constructing Virtual Nodes, Virtual Blades and
+Virtual Networks on top of those resources. In addition to this, every
+vTDS configuration includes an Application Layer responsible for
+setting up and deploying the target application on the running Virtual
+Nodes and Virtual Networks. For example, the OpenCHAMI application
+layer allows OpenCHAMI to be deployed as a running system with a
+management node and a configurable number of Virtual Compute nodes
+with a single command.
+
+Because vTDS not only automates allocation of resources to run a given
+application, but can also automate deployment of that application on
+those resources, it makes creating a development or test environment
+simple. Nearly all of the complexity of deploying a system is
+encapsulated in publicly available canned configurations, and the work
+of getting the application running is built into an application layer
+specific to that application. When vTDS finishes deploying a system, a
+complete system is up and running. When the user is finished with the
+system, another single command shuts down the application and releases
+the underlying resources.
+
 ## Getting started with vTDS
 
 This section provides instructions for the vTDS Core part of getting
